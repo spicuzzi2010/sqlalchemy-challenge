@@ -114,11 +114,24 @@ def stats(start=None, end=None):
     """Return TMIN, TAVG, TMAX."""
 
     session = Session(engine)
-    results = session.query().all()
+
+    sel = [Measurement.station, 
+       func.min(Measurement.tobs).label("min_temp"), 
+       func.max(Measurement.tobs).label("max_temp"), 
+       func.round(func.avg(Measurement.tobs),2).label("avg_temp")]
+    
+    if end = None:
+        results = session.query(*sel).\
+        filter(Measurement.date >= start).all()
+    else:
+        results = session.query(*sel).\
+        filter(Measurement.date.between(start,end))
+    
+    stats_list = list(np.ravel(results))
+
+    return jsonify(stats_list)
+
     session.close()
-
-    return jsonify()
-
 if __name__ == '__main__':
     app.run()
 
