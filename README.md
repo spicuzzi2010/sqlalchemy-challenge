@@ -38,7 +38,7 @@ In the climate notebook I performed climate analysis and data exploration of a c
 * Plot the results as a histogram with bins=12.
 
 
-![12 Month TOBS(./Images/12_Months_tobs.png)
+![12 Month TOBS](./Images/12_Months_tobs.png)
 
 
 
