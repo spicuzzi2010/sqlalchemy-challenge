@@ -39,7 +39,8 @@ def welcome():
         f"/api/v1.0/precipitation<br/>"
         f"/api/v1.0/stations<br/>"
         f"/api/v1.0/tobs<br/>"
-        f"/api/v1.0/temp/start/end"
+        f"/api/v1.0/start<br/>"
+        f"/api/v1.0/start/end"
     )
 
 @app.route("/api/v1.0/precipitation")
@@ -62,9 +63,10 @@ def precipitation():
         precipitation_dict[result.date] = result.prcp
         last_year_precipitation.append(precipitation_dict)
 
+    session.close()
+
     return jsonify(last_year_precipitation)
 
-    session.close()
 @app.route("/api/v1.0/stations")
 def stations():
     """Return a list of stations."""
@@ -74,9 +76,10 @@ def stations():
     # Unravel results into a 1D array and convert to a list
     station_count_list = list(np.ravel(results))
 
+    session.close()
+
     return jsonify(station_count_list)
 
-    session.close()
 @app.route("/api/v1.0/tobs")
 def temp_monthly():
     """Return the temperature observations (tobs) for previous year."""
@@ -104,34 +107,36 @@ def temp_monthly():
     filter(Measurement.station == Station.station).\
     filter(Measurement.station == most_active).all()
 
+    session.close()
+
     tobs = list(np.ravel(results))
 
     return jsonify(tobs)
 
-    session.close()
-
+@app.route("/api/v1.0/<start>") 
+@app.route("/api/v1.0/<start>/<end>") 
 def stats(start=None, end=None):
     """Return TMIN, TAVG, TMAX."""
 
     session = Session(engine)
 
-    sel = [Measurement.station, 
-       func.min(Measurement.tobs).label("min_temp"), 
-       func.max(Measurement.tobs).label("max_temp"), 
-       func.round(func.avg(Measurement.tobs),2).label("avg_temp")]
+    sel = [func.min(Measurement.tobs), 
+       func.max(Measurement.tobs), 
+       func.round(func.avg(Measurement.tobs),2)]
     
-    if end = None:
-        results = session.query(*sel).\
+    if end is None:
+         results = session.query(*sel).\
         filter(Measurement.date >= start).all()
     else:
         results = session.query(*sel).\
         filter(Measurement.date.between(start,end))
+
+    session.close()
     
-    stats_list = list(np.ravel(results))
+    stats_list = list(results)
 
     return jsonify(stats_list)
 
-    session.close()
 if __name__ == '__main__':
     app.run()
 
